@@ -1,7 +1,9 @@
 import os
 import json
+import torch
 from PIL import Image
 from torch.utils.data import Dataset
+
 
 class PolyvoreDataset(Dataset):
     def __init__(self, json_path, image_dir, transform=None):
@@ -13,6 +15,8 @@ class PolyvoreDataset(Dataset):
 
     def __len__(self):
         return len(self.data)
+
+    import torch
 
     def __getitem__(self, idx):
         outfit = self.data[idx]
@@ -26,5 +30,7 @@ class PolyvoreDataset(Dataset):
                 image = self.transform(image)
             images.append(image)
 
-        label = 1  # all are positive
+        images = torch.stack(images, dim=0)  # Shape: [num_items, 3, H, W]
+        label = 1  # All positive for now
         return images, label
+
