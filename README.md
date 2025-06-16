@@ -21,6 +21,30 @@ The main idea is to figure out if an outfit is stylish and compatible. To do thi
 * **Outfit Embedding:** Generates a unique digital representation (a vector) for each outfit, summarizing its overall style and compatibility.
 * **Ongoing Development:** Actively working on combining the feature extraction and compatibility learning into one system, then training and improving its accuracy.
 
+## 🧾 Dataset
+
+We use the **Polyvore Outfits (Disjoint)** dataset for training and testing fashion compatibility.
+
+- 📦 **Download**: [Polyvore Dataset on Kaggle](https://www.kaggle.com/datasets/xthan/polyvore-outfits)  
+- 💡 The "disjoint" split ensures that no outfit items overlap between train and test sets.
+
+After downloading:
+- Place `train.json`, `test.json`, and `valid.json` inside `data/polyvore_outfits/disjoint/`
+- Place all outfit images inside `data/polyvore_outfits/images/`
+
+---
+
+## 📄 Research Paper
+
+This project is inspired by the paper:  
+**"Learning Fashion Compatibility with Bidirectional LSTMs"**  
+by Han et al., CVPR 2017.
+
+- 🔗 [Read the Paper on arXiv](https://arxiv.org/abs/1707.05691)
+
+It proposes modeling an outfit as a sequence of items and using BiLSTM to learn the visual compatibility between them.
+
+
 ## Author
 
 **Saumya Agarwal**
