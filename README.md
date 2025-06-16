@@ -1,113 +1,33 @@
-# 👗 Fashion Compatibility Detection with ResNet + BiLSTM
+# Fashion Compatibility Detection (ResNet + BiLSTM)
 
-This project detects whether a group of fashion items (like tops, bottoms, shoes, etc.) go well together. It uses a **ResNet-18** model to extract features from item images and a **BiLSTM** to understand the compatibility between the items in an outfit.
+This project is all about checking if different pieces of clothing, when put together as an outfit, actually look good. Think of it like an AI stylist! It uses advanced computer vision techniques to "see" and "understand" how well clothes match.
 
----
+## What's Happening
 
-## 🧠 What It Does
+The main idea is to figure out if an outfit is stylish and compatible. To do this, the project first looks at each individual clothing item in an outfit. It uses a smart image recognition system to extract important details (features) from each item's picture. Once it has these details for all items in an outfit, it then feeds them into another intelligent system that learns to decide if they work well together. Finally, it gives you a digital "signature" or "embedding" that represents how compatible the whole outfit is.
 
-Given a list of fashion item images that form an outfit, the model:
+## Major Technologies Used
 
-- Extracts visual features for each item using a pretrained ResNet-18.
-- Feeds those features into a BiLSTM to learn the compatibility across the outfit.
-- Outputs a single feature vector per outfit for further tasks like:
-  - Ranking outfit compatibility
-  - Classifying outfits as good/bad
-  - Generating outfit recommendations
+* **ResNet-18:** This is a powerful, pre-trained image recognition model. It acts like the "eyes" of the system, extracting detailed visual information from clothing images.
+* **BiLSTM (Bidirectional Long Short-Term Memory):** This is a type of neural network that's great at understanding sequences. After ResNet extracts features from each item, the BiLSTM looks at these features in a sequence (like a list of items in an outfit) to understand their overall relationship and compatibility.
+* **PyTorch:** A popular machine learning framework that makes it easier to build and train these complex neural networks.
+* **Python:** The main programming language used for the entire project.
 
----
+## Important Features
 
-## 🏗️ Architecture
+* **Outfit Analysis:** Takes a group of clothing item images as input.
+* **Intelligent Feature Extraction:** Uses a pre-trained ResNet-18 model to automatically pull out key visual features from each clothing item.
+* **Compatibility Learning:** Employs a BiLSTM model to learn the patterns and relationships that make an outfit compatible or not.
+* **Outfit Embedding:** Generates a unique digital representation (a vector) for each outfit, summarizing its overall style and compatibility.
+* **Ongoing Development:** Actively working on combining the feature extraction and compatibility learning into one system, then training and improving its accuracy.
 
-Image → ResNet18 → Feature Embedding → BiLSTM → Outfit Embedding
+## Author
 
+**Saumya Agarwal**
+BTech CSE-AI & ML, VIT Chennai
 
-- **ResNet-18**: Modified to act as a fixed feature extractor (no classification head).
-- **BiLSTM**: Models relationships across item features in an outfit.
-- **Final output**: A 512D vector representing the whole outfit.
+**Meghna Mandawra**
+BTech CSE-AI & ML, VIT Chennai
 
----
-
-## 🗂️ Project Structure
-
-fashion-compatibility/
-├── data/
-│ └── polyvore_outfits/
-│ ├── disjoint/
-│ │ └── train.json
-│ └── images/
-│ └── *.jpg
-├── dataset/
-│ └── polyvore_dataset.py # Dataset class for loading outfits
-├── models/
-│ ├── resnet18_model.py # Custom ResNet18 feature extractor
-│ ├── resnet_encoder.py # ResNet wrapped as a module
-│ └── fashion_encoder.py # ResNet + BiLSTM encoder
-├── main.py # Script to test feature extraction
-└── README.md
-
-
----
-
-## 🛠️ Setup
-
-### 1. Clone the repo
-
-```bash
-git clone https://github.com/yourusername/fashion-compatibility.git
-cd fashion-compatibility
-
-### 2. Install requirements
-3. Prepare Dataset
-Download and extract the Polyvore Outfit Dataset.
-
-Place:
-
-Outfit JSON files in data/polyvore_outfits/disjoint/
-
-Images in data/polyvore_outfits/images/
-
-4. Run Example
-python main.py
-
-🧪 Output
-Once you run main.py, it will:
-
-Load a batch of outfits from the dataset
-
-Pass each item through the ResNet model
-
-Print shape of feature embeddings from the final layer (expected: [num_items, 512])
-
-📁 Dataset Format
-JSON files like train.json contain outfit information (list of item image filenames).
-
-images/ folder contains the corresponding fashion item images.
-
-Each outfit is a list of 2–8 items.
-
-📊 Roadmap
-✅ ResNet18 feature extractor
-
-✅ Custom Dataset & Dataloader for Polyvore
-
-✅ Feature generation for outfit items
-
-⏳ BiLSTM outfit encoder (WIP)
-
-⏳ Contrastive Loss training
-
-⏳ Final compatibility scoring module
-
-👩‍💻 Author
-Saumya
-BTech CSE-AI + Robotics @ VIT Chennai
-@yourusername
-
-🙌 Acknowledgements
-PyTorch
-
-Polyvore Outfits Dataset
-
-Original ResNet paper: "Deep Residual Learning for Image Recognition"
-
+**Kavya R**
+BTech CSE Core, VIT Chennai
