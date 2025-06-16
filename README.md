@@ -25,7 +25,7 @@ The main idea is to figure out if an outfit is stylish and compatible. To do thi
 
 We use the **Polyvore Outfits (Disjoint)** dataset for training and testing fashion compatibility.
 
-- 📦 **Download**: [Polyvore Dataset on Kaggle](https://www.kaggle.com/datasets/xthan/polyvore-outfits](https://www.kaggle.com/datasets/enisteper1/polyvore-outfit-dataset)
+- 📦 **Download**: [Polyvore Dataset on Kaggle](https://www.kaggle.com/datasets/enisteper1/polyvore-outfit-dataset)
 - 💡 The "disjoint" split ensures that no outfit items overlap between train and test sets.
 
 After downloading:
