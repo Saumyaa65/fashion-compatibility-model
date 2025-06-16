@@ -25,7 +25,7 @@ The main idea is to figure out if an outfit is stylish and compatible. To do thi
 
 We use the **Polyvore Outfits (Disjoint)** dataset for training and testing fashion compatibility.
 
-- 📦 **Download**: [Polyvore Dataset on Kaggle](https://www.kaggle.com/datasets/xthan/polyvore-outfits)  
+- 📦 **Download**: [Polyvore Dataset on Kaggle]([https://www.kaggle.com/datasets/xthan/polyvore-outfits](https://www.kaggle.com/datasets/enisteper1/polyvore-outfit-dataset))  
 - 💡 The "disjoint" split ensures that no outfit items overlap between train and test sets.
 
 After downloading:
@@ -33,16 +33,6 @@ After downloading:
 - Place all outfit images inside `data/polyvore_outfits/images/`
 
 ---
-
-## 📄 Research Paper
-
-This project is inspired by the paper:  
-**"Learning Fashion Compatibility with Bidirectional LSTMs"**  
-by Han et al., CVPR 2017.
-
-- 🔗 [Read the Paper on arXiv](https://arxiv.org/abs/1707.05691)
-
-It proposes modeling an outfit as a sequence of items and using BiLSTM to learn the visual compatibility between them.
 
 
 ## Author
