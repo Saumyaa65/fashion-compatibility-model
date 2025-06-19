@@ -7,6 +7,9 @@ from dataset.polyvore_dataset import PolyvoreDataset
 from models.resnet_encoder import ResNetEncoder
 from models.lstm_model import OutfitLSTM
 
+from torch.utils.data import Subset
+import random
+
 # -----------------------------
 # Device setup
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -47,9 +50,11 @@ def custom_collate_fn(batch):
     outfit_tensors = torch.stack(padded_outfits)  # [B, N, 3, H, W]
     return outfit_tensors, torch.tensor(labels)
 
+num_samples = int(0.05 * len(dataset))  # take 10% data
+indices = random.sample(range(len(dataset)), num_samples)
+small_dataset = Subset(dataset, indices)
 
-
-loader = DataLoader(dataset, batch_size=4, shuffle=True, collate_fn=custom_collate_fn)
+loader = DataLoader(small_dataset, batch_size=16, shuffle=True, collate_fn=custom_collate_fn)
 
 # -----------------------------
 # Model setup
@@ -70,19 +75,33 @@ model = FashionCompatibilityModel().to(device)
 criterion = nn.BCEWithLogitsLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 
+
+print(len(dataset))
+print(len(small_dataset))
+
 # -----------------------------
-# Run one batch
-for images, labels in loader:
-    images = images.to(device)
-    labels = labels.float().to(device)
+import time
 
-    outputs = model(images).squeeze(1)  # [B]
-    loss = criterion(outputs, labels)
+num_epochs = 5  # adjust as needed
 
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
+for epoch in range(num_epochs):
+    model.train()
+    total_loss = 0.0
 
-    print(f"Loss: {loss.item():.4f}")
-    break
+    for images, labels in loader:
+        images = images.to(device)
+        labels = labels.float().to(device)
+
+        outputs = model(images).squeeze(1)
+        loss = criterion(outputs, labels)
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        total_loss += loss.item()
+
+    avg_loss = total_loss / len(loader)
+    print(f"Epoch [{epoch+1}/{num_epochs}] - Training Loss: {avg_loss:.4f}")
+
 
