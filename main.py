@@ -1,4 +1,5 @@
 import torch
+from tqdm import tqdm
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision import transforms
@@ -49,12 +50,13 @@ def custom_collate_fn(batch):
 
     outfit_tensors = torch.stack(padded_outfits)  # [B, N, 3, H, W]
     return outfit_tensors, torch.tensor(labels)
+    
 
-num_samples = int(0.05 * len(dataset))  # take 10% data
+num_samples = int(1 * len(dataset))  # take 10% data
 indices = random.sample(range(len(dataset)), num_samples)
 small_dataset = Subset(dataset, indices)
 
-loader = DataLoader(small_dataset, batch_size=16, shuffle=True, collate_fn=custom_collate_fn)
+loader = DataLoader(small_dataset, batch_size=8, shuffle=True, num_workers=4, collate_fn=custom_collate_fn)
 
 # -----------------------------
 # Model setup
@@ -76,32 +78,39 @@ criterion = nn.BCEWithLogitsLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 
 
-print(len(dataset))
-print(len(small_dataset))
 
 # -----------------------------
 import time
 
-num_epochs = 5  # adjust as needed
+num_epochs = 3  # adjust as needed
 
-for epoch in range(num_epochs):
-    model.train()
-    total_loss = 0.0
+if __name__ == "__main__":
+    
+    print(len(dataset))
+    print(len(small_dataset))
+    
+    for epoch in range(num_epochs):
+        print(f"Epoch {epoch+1}/{num_epochs}")
+        model.train()
+        total_loss = 0.0
 
-    for images, labels in loader:
-        images = images.to(device)
-        labels = labels.float().to(device)
+        pbar = tqdm(loader, desc=f"Training Epoch {epoch+1}", leave=False)
 
-        outputs = model(images).squeeze(1)
-        loss = criterion(outputs, labels)
+        for images, labels in pbar:
+            images = images.to(device)
+            labels = labels.float().to(device)
 
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+            outputs = model(images).squeeze(1)
+            loss = criterion(outputs, labels)
 
-        total_loss += loss.item()
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
-    avg_loss = total_loss / len(loader)
-    print(f"Epoch [{epoch+1}/{num_epochs}] - Training Loss: {avg_loss:.4f}")
+            total_loss += loss.item()
+            pbar.set_postfix(loss=loss.item())
+
+        avg_loss = total_loss / len(loader)
+        print(f"Epoch [{epoch+1}/{num_epochs}] - Training Loss: {avg_loss:.4f}")
 
 
