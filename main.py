@@ -11,9 +11,14 @@ from models.lstm_model import OutfitLSTM
 from torch.utils.data import Subset
 import random
 import os
+import csv
+import numpy as np
+
 
 os.makedirs("checkpoints", exist_ok=True)
-
+torch.manual_seed(42)
+random.seed(42)
+np.random.seed(42)
 
 # -----------------------------
 # Device setup
@@ -23,9 +28,13 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Define transform
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
+    transforms.RandomHorizontalFlip(p=0.5),   # randomly flip outfit images
+    transforms.RandomRotation(10),            # small random rotation
+    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),  # slight color variations
     transforms.ToTensor(),
     transforms.Normalize([0.5]*3, [0.5]*3)
 ])
+
 
 # -----------------------------
 # Dataset + Dataloader
@@ -92,7 +101,7 @@ class FashionCompatibilityModel(nn.Module):
 
 model = FashionCompatibilityModel().to(device)
 criterion = nn.BCEWithLogitsLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-5)
 
 @torch.no_grad()
 def validate(model, valid_loader):
@@ -147,6 +156,11 @@ if __name__ == "__main__":
     print(len(train_dataset))
     print(len(valid_dataset))
     best_val_loss = float('inf')
+
+    with open("checkpoints/loss_log.csv", mode='w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["Epoch", "Train Loss", "Validation Loss"])
+
     
     for epoch in range(num_epochs):
         print(f"Epoch {epoch+1}/{num_epochs}")
@@ -174,6 +188,12 @@ if __name__ == "__main__":
 
         val_loss = validate(model, valid_loader)
         print(f"Epoch [{epoch+1}/{num_epochs}] - Validation Loss: {val_loss:.4f}")
+
+        # Save losses to CSV
+        with open("checkpoints/loss_log.csv", mode='a', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow([epoch+1, avg_loss, val_loss])
+
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
