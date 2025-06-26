@@ -10,6 +10,10 @@ from models.lstm_model import OutfitLSTM
 
 from torch.utils.data import Subset
 import random
+import os
+
+os.makedirs("checkpoints", exist_ok=True)
+
 
 # -----------------------------
 # Device setup
@@ -25,8 +29,18 @@ transform = transforms.Compose([
 
 # -----------------------------
 # Dataset + Dataloader
-dataset = PolyvoreDataset(
+train_dataset = PolyvoreDataset(
     json_path="data/polyvore_outfits/disjoint/train.json",
+    image_dir="data/polyvore_outfits/images",
+    transform=transform
+)
+valid_dataset = PolyvoreDataset(
+    json_path="data/polyvore_outfits/disjoint/valid.json",
+    image_dir="data/polyvore_outfits/images",
+    transform=transform
+)
+test_dataset = PolyvoreDataset(
+    json_path="data/polyvore_outfits/disjoint/test.json",
     image_dir="data/polyvore_outfits/images",
     transform=transform
 )
@@ -52,11 +66,14 @@ def custom_collate_fn(batch):
     return outfit_tensors, torch.tensor(labels)
     
 
-num_samples = int(1 * len(dataset))  # take 10% data
-indices = random.sample(range(len(dataset)), num_samples)
-small_dataset = Subset(dataset, indices)
+# num_samples = int(1 * len(train_dataset))  # take 10% data
+# indices = random.sample(range(len(train_dataset)), num_samples)
+# small_train_dataset = Subset(train_dataset, indices)
 
-loader = DataLoader(small_dataset, batch_size=8, shuffle=True, num_workers=4, collate_fn=custom_collate_fn)
+train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True, num_workers=2, collate_fn=custom_collate_fn)
+valid_loader = DataLoader(valid_dataset, batch_size=8, shuffle=True, num_workers=2, collate_fn=custom_collate_fn)
+test_loader = DataLoader(test_dataset, batch_size=8, shuffle=False, num_workers=2, collate_fn=custom_collate_fn)
+
 
 # -----------------------------
 # Model setup
@@ -77,24 +94,66 @@ model = FashionCompatibilityModel().to(device)
 criterion = nn.BCEWithLogitsLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 
+@torch.no_grad()
+def validate(model, valid_loader):
+    model.eval()
+    total_loss = 0.0
+
+    for images, labels in valid_loader:
+        images = images.to(device)
+        labels = labels.float().to(device)
+
+        outputs = model(images).squeeze(1)
+        loss = criterion(outputs, labels)
+
+        total_loss += loss.item()
+
+    avg_val_loss = total_loss / len(valid_loader)
+    return avg_val_loss
+
+
+@torch.no_grad()
+def test(model, test_loader):
+    model.eval()
+    total_loss = 0.0
+    correct = 0
+    total = 0
+
+    for images, labels in tqdm(test_loader, desc="Testing", leave=False):
+        images = images.to(device)
+        labels = labels.float().to(device)
+
+        outputs = model(images).squeeze(1)
+        loss = criterion(outputs, labels)
+        total_loss += loss.item()
+
+        preds = torch.sigmoid(outputs) > 0.5
+        correct += (preds.float() == labels).sum().item()
+        total += labels.size(0)
+
+    avg_loss = total_loss / len(test_loader)
+    accuracy = correct / total
+
+    print(f"\n🧪 Test Loss: {avg_loss:.4f} | Accuracy: {accuracy*100:.2f}%\n")
 
 
 # -----------------------------
 import time
 
-num_epochs = 3  # adjust as needed
+num_epochs = 5  # adjust as needed
 
 if __name__ == "__main__":
     
-    print(len(dataset))
-    print(len(small_dataset))
+    print(len(train_dataset))
+    print(len(valid_dataset))
+    best_val_loss = float('inf')
     
     for epoch in range(num_epochs):
         print(f"Epoch {epoch+1}/{num_epochs}")
         model.train()
         total_loss = 0.0
 
-        pbar = tqdm(loader, desc=f"Training Epoch {epoch+1}", leave=False)
+        pbar = tqdm(train_loader, desc=f"Training Epoch {epoch+1}", leave=False)
 
         for images, labels in pbar:
             images = images.to(device)
@@ -110,7 +169,21 @@ if __name__ == "__main__":
             total_loss += loss.item()
             pbar.set_postfix(loss=loss.item())
 
-        avg_loss = total_loss / len(loader)
+        avg_loss = total_loss / len(train_loader)
         print(f"Epoch [{epoch+1}/{num_epochs}] - Training Loss: {avg_loss:.4f}")
 
+        val_loss = validate(model, valid_loader)
+        print(f"Epoch [{epoch+1}/{num_epochs}] - Validation Loss: {val_loss:.4f}")
+
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            torch.save(model.state_dict(), "checkpoints/best_model.pth")
+            print("🎯 Best model updated and saved!")
+    
+    # Load and test best model
+    model.load_state_dict(torch.load("checkpoints/best_model.pth"))
+    test(model, test_loader)
+
+
+        
 
