@@ -30,7 +30,6 @@ transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.RandomHorizontalFlip(p=0.5),   # randomly flip outfit images
     transforms.RandomRotation(10),            # small random rotation
-    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),  # slight color variations
     transforms.ToTensor(),
     transforms.Normalize([0.5]*3, [0.5]*3)
 ])
@@ -39,17 +38,17 @@ transform = transforms.Compose([
 # -----------------------------
 # Dataset + Dataloader
 train_dataset = PolyvoreDataset(
-    json_path="data/polyvore_outfits/disjoint/train.json",
+    json_path="data/polyvore_outfits/disjoint/combined_train.json",
     image_dir="data/polyvore_outfits/images",
     transform=transform
 )
 valid_dataset = PolyvoreDataset(
-    json_path="data/polyvore_outfits/disjoint/valid.json",
+    json_path="data/polyvore_outfits/disjoint/combined_valid.json",
     image_dir="data/polyvore_outfits/images",
     transform=transform
 )
 test_dataset = PolyvoreDataset(
-    json_path="data/polyvore_outfits/disjoint/test.json",
+    json_path="data/polyvore_outfits/disjoint/combined_test.json",
     image_dir="data/polyvore_outfits/images",
     transform=transform
 )
@@ -75,13 +74,21 @@ def custom_collate_fn(batch):
     return outfit_tensors, torch.tensor(labels)
     
 
-# num_samples = int(1 * len(train_dataset))  # take 10% data
-# indices = random.sample(range(len(train_dataset)), num_samples)
-# small_train_dataset = Subset(train_dataset, indices)
+num_samples = int(0.03 * len(train_dataset))  # take 10% data
+indices = random.sample(range(len(train_dataset)), num_samples)
+small_train_dataset = Subset(train_dataset, indices)
 
-train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True, num_workers=2, collate_fn=custom_collate_fn)
-valid_loader = DataLoader(valid_dataset, batch_size=8, shuffle=True, num_workers=2, collate_fn=custom_collate_fn)
-test_loader = DataLoader(test_dataset, batch_size=8, shuffle=False, num_workers=2, collate_fn=custom_collate_fn)
+num_samples = int(0.03 * len(valid_dataset))  # take 10% data
+indices = random.sample(range(len(valid_dataset)), num_samples)
+small_valid_dataset = Subset(valid_dataset, indices)
+
+num_samples = int(0.03 * len(test_dataset))  # take 10% data
+indices = random.sample(range(len(test_dataset)), num_samples)
+small_test_dataset = Subset(test_dataset, indices)
+
+train_loader = DataLoader(small_train_dataset, batch_size=8, shuffle=True, num_workers=0, collate_fn=custom_collate_fn)
+valid_loader = DataLoader(small_valid_dataset, batch_size=8, shuffle=True, num_workers=0, collate_fn=custom_collate_fn)
+test_loader = DataLoader(small_test_dataset, batch_size=8, shuffle=False, num_workers=0, collate_fn=custom_collate_fn)
 
 
 # -----------------------------
@@ -149,12 +156,13 @@ def test(model, test_loader):
 # -----------------------------
 import time
 
-num_epochs = 5  # adjust as needed
+num_epochs = 1  # adjust as needed
 
 if __name__ == "__main__":
     
-    print(len(train_dataset))
-    print(len(valid_dataset))
+    print(len(small_train_dataset))
+    print(len(small_valid_dataset))
+    print(len(small_train_dataset))
     best_val_loss = float('inf')
 
     with open("checkpoints/loss_log.csv", mode='w', newline='') as f:

@@ -20,7 +20,8 @@ class PolyvoreDataset(Dataset):
 
     def __getitem__(self, idx):
         outfit = self.data[idx]
-        item_ids = [item["item_id"] for item in outfit["items"]]
+        item_ids = outfit["item_ids"]
+
 
         images = []
         for item_id in item_ids:
@@ -31,6 +32,8 @@ class PolyvoreDataset(Dataset):
             images.append(image)
 
         images = torch.stack(images, dim=0)  # Shape: [num_items, 3, H, W]
-        label = 1  # All positive for now
+
+        label = outfit["label"]
+
         return images, label
 
